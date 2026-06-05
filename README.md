@@ -16,14 +16,14 @@ User ──► Frontend (Next.js, :3000)
 
 ### Services
 
-| Service | File | Port | Description |
+| Service | Path | Port | Description |
 |---|---|---|---|
-| `agent` | `backend_agent.py` | 8000 | FastAPI + Google ADK root agent, AG-UI protocol |
-| `mcp` | `mcp_server.py` | 9000 | FastMCP SSE server — DuckDB tools exposed to the agent |
-| `embeddings` | `embedding_service.py` | 6666 | FastAPI service serving `BAAI/bge-m3` embeddings |
+| `agent` | `services/agent/backend_agent.py` | 8000 | FastAPI + Google ADK root agent, AG-UI protocol |
+| `mcp` | `services/mcp/mcp_server.py` | 9000 | FastMCP SSE server — DuckDB tools exposed to the agent |
+| `embeddings` | `services/embeddings/embedding_service.py` | 6666 | FastAPI service serving `BAAI/bge-m3` embeddings |
 | `frontend` | `ui/` | 3000 | Next.js chat UI |
 
-### Agent logic (`agent.py`)
+### Agent logic (`services/agent/agent.py`)
 
 The root agent (Mistral via Azure AI) dispatches to four workflows:
 
@@ -35,7 +35,7 @@ The root agent (Mistral via Azure AI) dispatches to four workflows:
 | **Similarity** | `most_similar` (vector search) |
 | **Open-ended analytics** | `get_schema` → `summarize_table` → `execute_query` |
 
-### MCP tools (`mcp_server.py`)
+### MCP tools (`services/mcp/mcp_server.py`)
 
 | Tool | Description |
 |---|---|
@@ -50,7 +50,7 @@ The root agent (Mistral via Azure AI) dispatches to four workflows:
 
 ## Database schema
 
-Built by `build_duckdb.py` from a JSONL export of the CRIS system.
+Built by `data/build_duckdb.py` from a JSONL export of the CRIS system.
 
 | Table | Key columns |
 |---|---|
@@ -71,7 +71,7 @@ Vector index via the DuckDB `vss` extension (cosine, HNSW).
 
 ### Configuration
 
-Runtime configuration lives in `config.py`, which reads from environment variables with the defaults shown below. Copy `.env.example` to `.env` and override any values you need.
+Runtime configuration lives in `services/agent/config.py`, which reads from environment variables with the defaults shown below. Copy `.env.example` to `.env` and override any values you need.
 
 ```bash
 cp .env.example .env
@@ -92,7 +92,7 @@ To use a different LLM provider — local (e.g. Ollama/vLLM) or cloud (e.g. Open
 ### Run
 
 ```bash
-docker compose up --build
+docker compose -f deploy/docker-compose.yml up --build
 ```
 
 Services start in dependency order: `embeddings` → `mcp` → `agent` → `frontend`.  
@@ -104,21 +104,21 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 pip install duckdb sentence-transformers
-python build_duckdb.py --input your_data.jsonl --db academic.duckdb
+python data/build_duckdb.py --input your_data.jsonl --db academic.duckdb
 ```
 
 Reads a JSONL file (one document per line), creates tables, builds the FTS index, generates embeddings with `BAAI/bge-m3`, and writes an HNSW index.
 
 **Adding new data:** re-run the script with a JSONL containing only the new records. The FTS and HNSW indexes are always dropped and rebuilt over the full `documents` table, so existing data remains indexed. Avoid re-submitting already-imported documents — the `document_authors` table has no deduplication and will accumulate duplicate rows. You can also delete the existing database and rebuild from scratch. 
 
-See [DATA_FORMAT.md](DATA_FORMAT.md) for the expected schema and a description of required vs optional fields. A sample dataset is provided in [sample_data.jsonl](sample_data.jsonl).
+See [data/DATA_FORMAT.md](data/DATA_FORMAT.md) for the expected schema and a description of required vs optional fields. A sample dataset is provided in [data/sample_data.jsonl](data/sample_data.jsonl).
 
 ## Kubernetes / AKS deployment
 
-See [helm/README.md](helm/README.md) for the full Helm chart reference and the `deploy-aks.sh` one-shot provisioning script.
+See [deploy/helm/README.md](deploy/helm/README.md) for the full Helm chart reference and the `deploy-aks.sh` one-shot provisioning script.
 
 Quick start:
 
 ```bash
-./deploy-aks.sh   # provisions ACR, AKS, storage, and installs the Helm chart
+./deploy/deploy-aks.sh   # provisions ACR, AKS, storage, and installs the Helm chart
 ```
