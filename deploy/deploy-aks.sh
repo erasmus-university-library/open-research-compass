@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Always run from repo root so relative paths (services/, deploy/helm/, etc.) resolve correctly
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 # ---------------------------------------------------------------------------
 # Configuration — edit these before running
 # ---------------------------------------------------------------------------
