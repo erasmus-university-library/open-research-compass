@@ -19,7 +19,7 @@ The `deploy-aks.sh` script at the repo root provisions all Azure infrastructure 
 ./deploy-aks.sh
 ```
 
-It reads `GOOGLE_API_KEY` from `.env` or prompts for it interactively. See [deploy-aks.sh](#deploy-akssh) below for what it does.
+It reads `AZURE_AI_API_KEY` and `AZURE_AI_API_BASE` from `.env` or prompts for them interactively. See [deploy-aks.sh](#deploy-akssh) below for what it does.
 
 ## Manual install
 
@@ -30,7 +30,9 @@ helm upgrade --install duck-agent ./helm/duck-agent \
   --namespace duck-agent \
   --create-namespace \
   --set image.registry=<acr-name>.azurecr.io \
-  --set googleApiKey=<your-google-api-key> \
+  --set azureAiApiKey=<your-azure-ai-api-key> \
+  --set azureAiApiBase=<your-azure-ai-endpoint> \
+  --set azModel=azure_ai/Mistral-Large-3 \
   --set storage.accountName=<storage-account-name> \
   --set storage.accountKey=<storage-account-key> \
   --wait \
@@ -46,7 +48,9 @@ All values live in [duck-agent/values.yaml](duck-agent/values.yaml). The four va
 | Value | Required | Description |
 |---|---|---|
 | `image.registry` | Yes | Container registry hostname, e.g. `duckagentacr.azurecr.io` |
-| `googleApiKey` | Yes | Google AI API key for Gemini 2.5 Flash |
+| `azureAiApiKey` | Yes | Azure AI API key |
+| `azureAiApiBase` | Yes | Azure AI endpoint URL, e.g. `https://your-endpoint.services.ai.azure.com/models` |
+| `azModel` | Yes | Model identifier, e.g. `azure_ai/Mistral-Large-3` |
 | `storage.accountName` | Yes | Azure Storage account name |
 | `storage.accountKey` | Yes | Azure Storage account key (used to mount Azure Files shares) |
 
@@ -174,7 +178,7 @@ Two Kubernetes Secrets are created by the chart:
 
 | Secret | Key | Source |
 |---|---|---|
-| `google-api-key` | `key` | `--set googleApiKey=...` |
+| `azure-ai-secret` | `api_key`, `api_base` | `--set azureAiApiKey=...`, `--set azureAiApiBase=...` |
 | `azure-files-secret` | `azurestorageaccountname`, `azurestorageaccountkey` | `--set storage.accountName/Key=...` |
 
 These values are base64-encoded by Helm at install time and never written to `values.yaml`.
