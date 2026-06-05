@@ -92,7 +92,7 @@ To use a different LLM provider — local (e.g. Ollama/vLLM) or cloud (e.g. Open
 ### Run
 
 ```bash
-docker compose -f deploy/docker-compose.yml up --build
+docker compose -f deploy/docker-compose.yml --env-file .env up --build
 ```
 
 Services start in dependency order: `embeddings` → `mcp` → `agent` → `frontend`.  
