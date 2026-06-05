@@ -1,0 +1,69 @@
+services:
+
+  embeddings:
+    build:
+      context: .
+      dockerfile: Dockerfile.embeddings
+    volumes:
+      - model_cache:/root/.cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6666/docs')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    command: ["python", "mcp_server.py"]
+    environment:
+      DB_PATH: ${DB_PATH:-/data/academic.duckdb}
+      EMBEDDING_SERVICE_URL: http://embeddings:6666
+      MCP_PORT: "9000"
+    volumes:
+      - ./academic.duckdb:/data/academic.duckdb
+    depends_on:
+      embeddings:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 9000), 2).close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    environment:
+      AZURE_AI_API_KEY: ${AZURE_AI_API_KEY}
+      AZURE_AI_API_BASE: ${AZURE_AI_API_BASE}
+      AZ_MODEL: ${AZ_MODEL:-azure_ai/mistral-small-2503}
+      MCP_URL: http://mcp:9000/sse
+    depends_on:
+      mcp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    environment:
+      AGENT_URL: http://agent:8000/
+    ports:
+      - "3000:3000"
+    depends_on:
+      agent:
+        condition: service_healthy
+
+volumes:
+  model_cache:

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: embeddings
+  namespace: {{ include "duck-agent.namespace" . }}
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: embeddings
+spec:
+  replicas: {{ .Values.embeddings.replicas }}
+  selector:
+    matchLabels:
+      {{- include "duck-agent.selectorLabels" "embeddings" | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "duck-agent.selectorLabels" "embeddings" | nindent 8 }}
+    spec:
+      {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      {{- end }}
+      containers:
+        - name: embeddings
+          image: {{ include "duck-agent.image" (dict "registry" .Values.image.registry "repo" .Values.embeddings.image.repository "tag" .Values.embeddings.image.tag) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.embeddings.port }}
+          resources:
+            {{- toYaml .Values.embeddings.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.embeddings.port }}
+            initialDelaySeconds: {{ .Values.embeddings.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.embeddings.readinessProbe.periodSeconds }}
+            failureThreshold: {{ .Values.embeddings.readinessProbe.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.embeddings.port }}
+            initialDelaySeconds: 150
+            periodSeconds: 30
+            failureThreshold: 5
+          volumeMounts:
+            - name: model-cache
+              mountPath: /root/.cache
+      volumes:
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: model-cache-pvc

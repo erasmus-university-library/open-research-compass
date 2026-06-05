@@ -1,0 +1,59 @@
+/* EUR house style overrides for CopilotKit */
+:root {
+  /* User message bubbles, header text, send button */
+  --copilot-kit-primary-color: #002328;
+  --copilot-kit-contrast-color: #ffffff;
+
+  /* Messages area and input */
+  --copilot-kit-background-color: #ffffff;
+  --copilot-kit-input-background-color: #ffffff;
+
+  /* Assistant message text */
+  --copilot-kit-secondary-color: #ffffff;
+  --copilot-kit-secondary-contrast-color: #002328;
+
+  /* Borders and dividers — EUR warm grey */
+  --copilot-kit-separator-color: #e3dad8;
+  --copilot-kit-muted-color: #c8bfbd;
+}
+
+/* Font override — Museo Sans across all CopilotKit elements */
+.copilotKitChat,
+.copilotKitMessages,
+.copilotKitMessage,
+.copilotKitHeader,
+.copilotKitInput,
+.copilotKitInput textarea,
+.copilotKitInput textarea::placeholder,
+.copilotKitMarkdownElement,
+.copilotKitParagraph {
+  font-family: 'Museo Sans', Arial, Helvetica, Verdana, sans-serif !important;
+}
+
+/* Chat container */
+.copilotKitChat {
+  background-color: #fff !important;
+}
+
+/* Header — EUR dark green text, warm grey bottom border */
+.copilotKitHeader {
+  border-bottom: 1px solid #e3dad8;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Input — EUR border radius and border color */
+.copilotKitInput {
+  border-radius: 1.2rem !important;
+  border: 1px solid #e3dad8 !important;
+}
+
+/* User message bubbles — EUR dark green */
+.copilotKitMessage.copilotKitUserMessage {
+  border-radius: 1.2rem 1.2rem 0.4rem 1.2rem;
+}
+
+/* Assistant message bubbles */
+.copilotKitMessage.copilotKitAssistantMessage {
+  border-radius: 1.2rem 1.2rem 1.2rem 0.4rem;
+}

@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/*
+  Museo Sans — commercial font by exljbris.
+  Drop the .otf files into /public/fonts/ to activate.
+  Weights used by EUR house style: 100, 300, 500, 700, 900.
+*/
+@font-face {
+  font-family: 'Museo Sans';
+  src: url('/fonts/MuseoSans_100.otf') format('opentype');
+  font-weight: 100;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Museo Sans';
+  src: url('/fonts/MuseoSans_300.otf') format('opentype');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Museo Sans';
+  src: url('/fonts/MuseoSans_500.otf') format('opentype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Museo Sans';
+  src: url('/fonts/MuseoSans_700.otf') format('opentype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Museo Sans';
+  src: url('/fonts/MuseoSans_900.otf') format('opentype');
+  font-weight: 900;
+  font-display: swap;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #002328;
+
+  --eur-green: #0c8066;
+  --eur-dark: #002328;
+  --eur-grey: #e3dad8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Museo Sans', Arial, Helvetica, sans-serif;
+
+  --color-eur-green: var(--eur-green);
+  --color-eur-dark: var(--eur-dark);
+  --color-eur-grey: var(--eur-grey);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Museo Sans', Arial, Helvetica, sans-serif;
+}

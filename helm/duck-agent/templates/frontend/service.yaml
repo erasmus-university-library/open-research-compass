@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: {{ include "duck-agent.namespace" . }}
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: {{ .Values.frontend.service.type }}
+  selector:
+    {{- include "duck-agent.selectorLabels" "frontend" | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: {{ .Values.frontend.port }}
+      protocol: TCP

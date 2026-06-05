@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent
+  namespace: {{ include "duck-agent.namespace" . }}
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "duck-agent.selectorLabels" "agent" | nindent 4 }}
+  ports:
+    - port: {{ .Values.agent.port }}
+      targetPort: {{ .Values.agent.port }}
+      protocol: TCP

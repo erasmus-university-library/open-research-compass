@@ -1,0 +1,86 @@
+# ---------------------------------------------------------------------------
+# Set these at deploy time via --set, never commit real values here
+# ---------------------------------------------------------------------------
+image:
+  registry: ""        # e.g. duckagentacr.azurecr.io
+  pullPolicy: IfNotPresent
+  pullSecret: ""      # name of an existing imagePullSecret; leave empty when using AKS managed identity + --attach-acr
+
+azureAiApiKey: ""     # --set azureAiApiKey=<key>
+azureAiApiBase: ""    # --set azureAiApiBase=<endpoint>
+azModel: "azure_ai/Mistral-Large-3"  # --set azModel=<model>
+
+storage:
+  accountName: ""     # --set storage.accountName=<name>
+  accountKey: ""      # --set storage.accountKey=<key>
+  duckdb:
+    shareName: duckdb-data
+    size: 5Gi
+  modelCache:
+    shareName: model-cache
+    size: 10Gi
+
+# ---------------------------------------------------------------------------
+# Service configuration
+# ---------------------------------------------------------------------------
+embeddings:
+  image:
+    repository: embeddings
+    tag: latest
+  replicas: 1
+  port: 6666
+  resources:
+    requests:
+      cpu: "2"
+      memory: 4Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  readinessProbe:
+    initialDelaySeconds: 120  # model takes ~2 min to load
+    periodSeconds: 15
+    failureThreshold: 10
+
+mcp:
+  image:
+    repository: mcp
+    tag: latest
+  replicas: 1
+  port: 9000
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+agent:
+  image:
+    repository: agent
+    tag: latest
+  replicas: 1
+  port: 8000
+  resources:
+    requests:
+      cpu: "1"
+      memory: 2Gi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+
+frontend:
+  image:
+    repository: frontend
+    tag: latest
+  replicas: 1
+  port: 3000
+  resources:
+    requests:
+      cpu: "500m"
+      memory: 1Gi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  service:
+    type: LoadBalancer

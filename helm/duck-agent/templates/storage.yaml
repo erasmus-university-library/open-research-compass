@@ -1,0 +1,80 @@
+---
+# PersistentVolume for the DuckDB file (static — references pre-created Azure Files share)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-duckdb-pv
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.storage.duckdb.size }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: file.csi.azure.com
+    volumeHandle: {{ .Release.Name }}-duckdb-vol
+    volumeAttributes:
+      storageAccount: {{ .Values.storage.accountName | quote }}
+      shareName: {{ .Values.storage.duckdb.shareName | quote }}
+    nodeStageSecretRef:
+      name: azure-files-secret
+      namespace: {{ include "duck-agent.namespace" . }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: duckdb-pvc
+  namespace: {{ include "duck-agent.namespace" . }}
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.storage.duckdb.size }}
+  volumeName: {{ .Release.Name }}-duckdb-pv
+  storageClassName: ""
+---
+# PersistentVolume for the embedding model cache
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Release.Name }}-model-cache-pv
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.storage.modelCache.size }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: file.csi.azure.com
+    volumeHandle: {{ .Release.Name }}-model-cache-vol
+    volumeAttributes:
+      storageAccount: {{ .Values.storage.accountName | quote }}
+      shareName: {{ .Values.storage.modelCache.shareName | quote }}
+    nodeStageSecretRef:
+      name: azure-files-secret
+      namespace: {{ include "duck-agent.namespace" . }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-cache-pvc
+  namespace: {{ include "duck-agent.namespace" . }}
+  labels:
+    {{- include "duck-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.storage.modelCache.size }}
+  volumeName: {{ .Release.Name }}-model-cache-pv
+  storageClassName: ""
