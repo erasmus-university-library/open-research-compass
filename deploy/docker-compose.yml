@@ -2,8 +2,8 @@ services:
 
   embeddings:
     build:
-      context: .
-      dockerfile: Dockerfile.embeddings
+      context: ..
+      dockerfile: services/embeddings/Dockerfile
     volumes:
       - model_cache:/root/.cache
     healthcheck:
@@ -15,15 +15,15 @@ services:
 
   mcp:
     build:
-      context: .
-      dockerfile: Dockerfile.agent
+      context: ..
+      dockerfile: services/mcp/Dockerfile
     command: ["python", "mcp_server.py"]
     environment:
       DB_PATH: ${DB_PATH:-/data/academic.duckdb}
       EMBEDDING_SERVICE_URL: http://embeddings:6666
       MCP_PORT: "9000"
     volumes:
-      - ./academic.duckdb:/data/academic.duckdb
+      - ../academic.duckdb:/data/academic.duckdb
     depends_on:
       embeddings:
         condition: service_healthy
@@ -36,8 +36,8 @@ services:
 
   agent:
     build:
-      context: .
-      dockerfile: Dockerfile.agent
+      context: ..
+      dockerfile: services/agent/Dockerfile
     environment:
       AZURE_AI_API_KEY: ${AZURE_AI_API_KEY}
       AZURE_AI_API_BASE: ${AZURE_AI_API_BASE}
@@ -55,7 +55,7 @@ services:
 
   frontend:
     build:
-      context: ./ui
+      context: ../ui
       dockerfile: Dockerfile
     environment:
       AGENT_URL: http://agent:8000/

@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.agent.txt .
-RUN pip install --no-cache-dir -r requirements.agent.txt
+COPY services/agent/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY agent.py backend_agent.py mcp_server.py __init__.py config.py ./
+COPY services/agent/agent.py services/agent/backend_agent.py services/agent/config.py __init__.py ./
 
 EXPOSE 8000
 

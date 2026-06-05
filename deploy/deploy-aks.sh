@@ -76,14 +76,13 @@ docker login "$ACR_SERVER" \
   --password "$ACR_PASSWORD"
 
 log "Building and pushing images"
-docker build --file Dockerfile.embeddings --tag "${ACR_SERVER}/embeddings:latest" .
+docker build --file services/embeddings/Dockerfile --tag "${ACR_SERVER}/embeddings:latest" .
 docker push "${ACR_SERVER}/embeddings:latest"
 
-# mcp and agent share the same Dockerfile; tagged separately for independent scaling
-docker build --file Dockerfile.agent --tag "${ACR_SERVER}/mcp:latest" .
+docker build --file services/mcp/Dockerfile --tag "${ACR_SERVER}/mcp:latest" .
 docker push "${ACR_SERVER}/mcp:latest"
 
-docker build --file Dockerfile.agent --tag "${ACR_SERVER}/agent:latest" .
+docker build --file services/agent/Dockerfile --tag "${ACR_SERVER}/agent:latest" .
 docker push "${ACR_SERVER}/agent:latest"
 
 docker build --file ui/Dockerfile --tag "${ACR_SERVER}/frontend:latest" ui/
@@ -150,7 +149,7 @@ az storage file upload \
 # 5. Helm install
 # ---------------------------------------------------------------------------
 log "Installing Helm chart"
-helm upgrade --install "$HELM_RELEASE" ./helm/duck-agent \
+helm upgrade --install "$HELM_RELEASE" ./deploy/helm/duck-agent \
   --namespace "$HELM_NAMESPACE" \
   --create-namespace \
   --set image.registry="$ACR_SERVER" \
@@ -180,6 +179,6 @@ echo ""
 echo "Useful commands:"
 echo "  kubectl get pods -n $HELM_NAMESPACE           # check pod status"
 echo "  kubectl logs -n $HELM_NAMESPACE deploy/embeddings  # service logs"
-echo "  helm upgrade duck-agent ./helm/duck-agent ... # redeploy after changes"
-echo "  helm uninstall duck-agent -n $HELM_NAMESPACE  # tear down"
-echo "  ./update-aks.sh SERVICE                       # build, push, and deploy service with next tag"
+echo "  helm upgrade duck-agent ./deploy/helm/duck-agent ... # redeploy after changes"
+echo "  helm uninstall duck-agent -n $HELM_NAMESPACE        # tear down"
+echo "  ./deploy/update-aks.sh SERVICE                      # build, push, and deploy service with next tag"

@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.embeddings.txt .
-RUN pip install --no-cache-dir -r requirements.embeddings.txt
+COPY services/embeddings/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY embedding_service.py config.py ./
+COPY services/embeddings/embedding_service.py services/agent/config.py ./
 
 EXPOSE 6666
 

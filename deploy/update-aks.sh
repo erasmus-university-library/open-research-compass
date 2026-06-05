@@ -73,10 +73,10 @@ fi
 # Resolve Dockerfile and deploy timeout
 # ---------------------------------------------------------------------------
 case "$SERVICE" in
-  embeddings) DOCKERFILE="Dockerfile.embeddings"; BUILD_CONTEXT=".";   TIMEOUT="12m" ;;
-  mcp)        DOCKERFILE="Dockerfile.agent";      BUILD_CONTEXT=".";   TIMEOUT="5m"  ;;
-  agent)      DOCKERFILE="Dockerfile.agent";      BUILD_CONTEXT=".";   TIMEOUT="5m"  ;;
-  frontend)   DOCKERFILE="ui/Dockerfile";         BUILD_CONTEXT="ui/"; TIMEOUT="5m"  ;;
+  embeddings) DOCKERFILE="services/embeddings/Dockerfile"; BUILD_CONTEXT=".";   TIMEOUT="12m" ;;
+  mcp)        DOCKERFILE="services/mcp/Dockerfile";        BUILD_CONTEXT=".";   TIMEOUT="5m"  ;;
+  agent)      DOCKERFILE="services/agent/Dockerfile";      BUILD_CONTEXT=".";   TIMEOUT="5m"  ;;
+  frontend)   DOCKERFILE="ui/Dockerfile";                  BUILD_CONTEXT="ui/"; TIMEOUT="5m"  ;;
 esac
 
 # ---------------------------------------------------------------------------
@@ -117,7 +117,7 @@ if [[ -f .env ]]; then
   AZ_MODEL=$(grep -E '^AZ_MODEL=' .env | cut -d= -f2-)
 fi
 
-helm upgrade "$HELM_RELEASE" ./helm/duck-agent \
+helm upgrade "$HELM_RELEASE" ./deploy/helm/duck-agent \
   --namespace "$HELM_NAMESPACE" \
   --reuse-values \
   --set "${SERVICE}.image.tag=${TAG}" \
