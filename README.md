@@ -93,7 +93,7 @@ You need two things that are not included in this repository:
 
 ```bash
 git clone https://github.com/erasmus-university-library/open-research-compass
-cd duck-agent
+cd open-research-compass
 ```
 
 ---
