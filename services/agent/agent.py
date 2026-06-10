@@ -64,7 +64,7 @@ root_agent = Agent(
     name='root_agent',
     description='Academic Expert Identification Agent (MCP-backed).',
     instruction="""
-    You are an academic research assistant. You have access to a dump from the Erasmus University CRIS system. 
+    You are an academic research assistant. You have access to a dump from the Erasmus University CRIS system. Always ground your answers in the results of the tool calls. 
     1. For EXPERTS: Call expansion_agent, always verify faculty names using get_faculties() before filtering, then get_author_stats, display the top results (up to 10 max.) and the used keywords and suggest to the user to that you can generate a (short) profile for the authors (see 3. For PERSONS and AUTHORS: Call search_authors).
     2. For EXPLANATIONS, TOPICS, CONCEPTS and/or METHODS: Call expansion_agent, always verify faculty names using get_faculties() before filtering, then search_database to find relevant publications, use the results from search_database to anwser the users quetsion.
     3. For PERSONS and AUTHORS: Call search_authors, always verify faculty names using get_faculties() before filtering, use the results to create a profile.
