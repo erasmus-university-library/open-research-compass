@@ -137,7 +137,7 @@ The database is not included. You need to build it from your own data, or use th
 **Option A: use the sample data (quickest way to verify everything works)**
 
 ```bash
-pip install duckdb sentence-transformers
+pip install -r data/requirements.txt
 python data/build_duckdb.py --input data/sample_data.jsonl --db academic.duckdb
 ```
 
@@ -148,7 +148,7 @@ This creates `academic.duckdb` in the project root using 12 synthetic publicatio
 Export your publications from [Pure](https://pure.eur.nl/) (via the API or reporting module), convert the records to the JSONL format described in [data/DATA_FORMAT.md](data/DATA_FORMAT.md), then run:
 
 ```bash
-pip install duckdb sentence-transformers
+pip install -r data/requirements.txt
 python data/build_duckdb.py --input your_export.jsonl --db academic.duckdb
 ```
 
@@ -181,10 +181,8 @@ All configuration is read from `.env`. The full list:
 | `AZURE_AI_API_KEY` | if using Azure AI | — | Azure AI API key |
 | `AZURE_AI_API_BASE` | if using Azure AI | — | Azure AI endpoint URL |
 | `AZ_MODEL` | no | `azure_ai/Mistral-Large-3` | LiteLLM model string for the agent |
-| `EMBEDDING_MODEL` | no | `BAAI/bge-m3` | Embedding model — must match the value used when building the database |
+| `EMBEDDING_MODEL` | no | `BAAI/bge-m3` | Embedding model used by the embedding service and `build_duckdb.py` |
 | `DB_PATH` | no | `academic.duckdb` | Path to the DuckDB file inside the container |
-
-> **Important:** `EMBEDDING_MODEL` must be the same in `.env` and in the `build_duckdb.py` call. If they differ, vector search will return wrong results.
 
 ## Kubernetes / AKS deployment
 

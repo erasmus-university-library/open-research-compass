@@ -1,9 +1,13 @@
 import argparse
 import duckdb
 import json
+import os
 import uuid
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
-from config import EMBEDDING_MODEL
+
+load_dotenv()
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
 
 # ============================================================
 # DB SETUP
