@@ -14,7 +14,7 @@ import requests
 # CONFIG
 # ============================================================
 
-from config import DB_PATH
+DB_PATH = os.getenv("DB_PATH", "academic.duckdb")
 
 mcp = FastMCP("academic-agent")
 
