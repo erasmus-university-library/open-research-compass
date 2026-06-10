@@ -1,6 +1,6 @@
 # Open Research Compass
 
-A multi-service AI agent that lets users query a [Pure](https://pure.eur.nl/) research information system (CRIS) dataset in natural language. Users can identify domain experts, search publications by topic, explore author profiles, and run ad-hoc analytics against the underlying DuckDB database.
+A multi-service AI agent that lets users query a [Pure](https://pure.eur.nl/) research information system (CRIS) dataset in natural language. Users can identify domain experts, search publications by topic, create author profiles, and run ad-hoc analytics against the underlying DuckDB database.
 
 ## Architecture
 
@@ -66,7 +66,7 @@ Vector index via the DuckDB `vss` extension (cosine, HNSW).
 
 | Item | Notes |
 |---|---|
-| **Source data** | The publication and author data comes from [Pure](https://pure.eur.nl/), the Erasmus University research information system. The actual export is not part of this repository — see [Data](#data) below for the expected format and a sample dataset you can use to get started. |
+| **Source data** | The publication and author data comes from [Pure](https://pure.eur.nl/), the Erasmus University research information system. The actual export is not part of this repository. See [Data](#data) below for the expected format and a sample dataset you can use to get started. |
 | **Credentials** | No API keys, `.env` files, or Azure/cloud credentials are committed. Copy `.env.example` to `.env` and fill in your own values before running. |
 | **Embeddings / pre-built database** | `academic.duckdb` is not committed (it is generated from your own data export). You must build it yourself with `build_duckdb.py`. |
 
