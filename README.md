@@ -78,55 +78,113 @@ To use this project you need to supply your own data in the expected JSONL forma
 
 If you are working with a Pure instance, export your publications via the Pure API or reporting module, transform the records to the JSONL schema described in DATA_FORMAT.md, and then run `build_duckdb.py` as described below.
 
-## Local development
+## Local setup — step by step
 
-### Prerequisites
+### Before you start
 
-- Docker and Docker Compose
-- An LLM with agentic (tool-calling) capabilities, accessible via a [LiteLLM](https://docs.litellm.ai/docs/providers)-compatible model string — any provider supported by LiteLLM works (Azure AI, OpenAI, OpenRouter, Vertex AI, Ollama/vLLM, etc.)
-- Your own publication data in the JSONL format described in [data/DATA_FORMAT.md](data/DATA_FORMAT.md), used to build `academic.duckdb`
+You need two things that are not included in this repository:
 
-### Configuration
+1. **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**  download and install it for your operating system (Mac, Windows, or Linux). Docker Desktop includes Docker Compose and runs all the services for you without needing to install Python, Node.js, or anything else manually.
+2. **An LLM API key** the agent requires a language model that supports tool calling. The default configuration uses Azure AI (Mistral), but any provider supported by [LiteLLM](https://docs.litellm.ai/docs/providers) works (OpenAI, OpenRouter, Google Vertex, a local Ollama instance, etc.).
 
-Runtime configuration lives in `services/agent/config.py`, which reads from environment variables with the defaults shown below. Copy `.env.example` to `.env` and override any values you need.
+---
+
+### Step 1 — Clone the repository
+
+```bash
+git clone https://github.com/erasmus-university-library/open-research-compass
+cd duck-agent
+```
+
+---
+
+### Step 2 — Configure your API credentials
+
+Copy the example environment file and open it in a text editor:
 
 ```bash
 cp .env.example .env
 ```
 
-| Variable | Default | Description |
+The file looks like this. Fill in your own values:
+
+```bash
+# Azure AI credentials (required if using Azure AI)
+AZURE_AI_API_KEY=your-key-here
+AZURE_AI_API_BASE=https://your-endpoint.services.ai.azure.com/models
+
+# Model (optional, change if using a different provider)
+AZ_MODEL=azure_ai/Mistral-Large-3
+```
+
+**Using a different LLM provider?** Set `AZ_MODEL` to the [LiteLLM model string](https://docs.litellm.ai/docs/providers) for your provider and add that provider's key instead. For example:
+
+| Provider | `AZ_MODEL` value | Key to add to `.env` |
 |---|---|---|
-| `AZURE_AI_API_KEY` | — | Azure AI API key (required) |
-| `AZURE_AI_API_BASE` | — | Azure AI endpoint URL (required) |
-| `AZ_MODEL` | `azure_ai/Mistral-Large-3` | LiteLLM model string for the root and expansion agents |
-| `EMBEDDING_MODEL` | `BAAI/bge-m3` | Sentence-transformers model used by the embedding service and `build_duckdb.py` |
-| `DB_PATH` | `academic.duckdb` | Path to the DuckDB file, read by the MCP server at runtime |
+| OpenAI | `openai/gpt-4o` | `OPENAI_API_KEY=sk-...` |
+| OpenRouter | `openrouter/google/gemini-2.0-flash-001` | `OPENROUTER_API_KEY=sk-...` |
+| Azure AI | `azure_ai/Mistral-Large-3` | `AZURE_AI_API_KEY` + `AZURE_AI_API_BASE` |
+| Ollama (local) | `ollama/llama3.1` | *(no key needed)* |
 
-`EMBEDDING_MODEL` must be the same value when building the database and when running the embedding service — if they differ, vector search results will be incorrect.
+The model must support tool/function calling.
 
-To use a different LLM provider — local (e.g. Ollama/vLLM) or cloud (e.g. OpenAI, OpenRouter, Google Vertex, etc.) — set `AZ_MODEL` to the appropriate LiteLLM model string for that provider and supply its auth env var (e.g., `OPENAI_API_KEY` for OpenAI). `AZURE_AI_API_KEY` and `AZURE_AI_API_BASE` are Azure-specific and ignored by LiteLLM for other providers.  
+---
 
-### Run
+### Step 3 — Build the database
+
+The database is not included. You need to build it from your own data, or use the provided sample to test first.
+
+**Option A: use the sample data (quickest way to verify everything works)**
+
+```bash
+pip install duckdb sentence-transformers
+python data/build_duckdb.py --input data/sample_data.jsonl --db academic.duckdb
+```
+
+This creates `academic.duckdb` in the project root using 12 synthetic publications. The embedding step downloads a ~570 MB model (`BAAI/bge-m3`) on first run and takes a few minutes.
+
+**Option B: use your own Pure export**
+
+Export your publications from [Pure](https://pure.eur.nl/) (via the API or reporting module), convert the records to the JSONL format described in [data/DATA_FORMAT.md](data/DATA_FORMAT.md), then run:
+
+```bash
+pip install duckdb sentence-transformers
+python data/build_duckdb.py --input your_export.jsonl --db academic.duckdb
+```
+
+When it finishes you should see `academic.duckdb` in the project root.
+
+> **Adding new records later:** re-run the script with a JSONL file containing only the new records. The search indexes are rebuilt automatically. Do not re-submit records already in the database since there is no deduplication and you will get duplicates. If in doubt, delete `academic.duckdb` and rebuild from scratch.
+
+---
+
+### Step 4 — Start the application
 
 ```bash
 docker-compose -f deploy/docker-compose.yml --env-file .env up --build
 ```
 
-Services start in dependency order: `embeddings` → `mcp` → `agent` → `frontend`.  
-The embeddings service loads a ~570 MB model on first start — allow ~2 minutes.
+Docker will build the four service images and start them in order. The first build takes several minutes. On subsequent runs it is much faster.
 
-Open [http://localhost:3000](http://localhost:3000).
+The embeddings service loads the model on first start. Allow around 2 minutes before the app is fully ready.
 
-### Build the database (one-time)
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```bash
-pip install duckdb sentence-transformers
-python data/build_duckdb.py --input your_data.jsonl --db academic.duckdb
-```
+---
 
-Reads a JSONL file (one document per line), creates tables, builds the FTS index, generates embeddings with `BAAI/bge-m3`, and writes an HNSW index. Use [data/sample_data.jsonl](data/sample_data.jsonl) to test the pipeline before loading real data.
+### Environment variable reference
 
-**Adding new data:** re-run the script with a JSONL containing only the new records. The FTS and HNSW indexes are always dropped and rebuilt over the full `documents` table, so existing data remains indexed. Avoid re-submitting already-imported documents — the `document_authors` table has no deduplication and will accumulate duplicate rows. You can also delete the existing database and rebuild from scratch.
+All configuration is read from `.env`. The full list:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `AZURE_AI_API_KEY` | if using Azure AI | — | Azure AI API key |
+| `AZURE_AI_API_BASE` | if using Azure AI | — | Azure AI endpoint URL |
+| `AZ_MODEL` | no | `azure_ai/Mistral-Large-3` | LiteLLM model string for the agent |
+| `EMBEDDING_MODEL` | no | `BAAI/bge-m3` | Embedding model — must match the value used when building the database |
+| `DB_PATH` | no | `academic.duckdb` | Path to the DuckDB file inside the container |
+
+> **Important:** `EMBEDDING_MODEL` must be the same in `.env` and in the `build_duckdb.py` call. If they differ, vector search will return wrong results.
 
 ## Kubernetes / AKS deployment
 
