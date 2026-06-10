@@ -1,6 +1,6 @@
 # Open Research Compass
 
-A multi-service AI agent that lets users query the Erasmus University CRIS dataset in natural language. Users can identify domain experts, search publications by topic, explore author profiles, and run ad-hoc analytics against the underlying DuckDB database.
+A multi-service AI agent that lets users query a [Pure](https://pure.eur.nl/) research information system (CRIS) dataset in natural language. Users can identify domain experts, search publications by topic, explore author profiles, and run ad-hoc analytics against the underlying DuckDB database.
 
 ## Architecture
 
@@ -25,7 +25,7 @@ User ──► Frontend (Next.js, :3000)
 
 ### Agent logic (`services/agent/agent.py`)
 
-The root agent (Mistral via Azure AI) dispatches to four workflows:
+The root agent (Mistral via Azure AI) dispatches to five workflows:
 
 | Query type | Workflow |
 |---|---|
@@ -62,12 +62,29 @@ Built by `data/build_duckdb.py` from a JSONL export of the CRIS system.
 FTS index on `documents(title, abstract)` via the DuckDB `fts` extension.  
 Vector index via the DuckDB `vss` extension (cosine, HNSW).
 
+## What is not included
+
+| Item | Notes |
+|---|---|
+| **Source data** | The publication and author data comes from [Pure](https://pure.eur.nl/), the Erasmus University research information system. The actual export is not part of this repository — see [Data](#data) below for the expected format and a sample dataset you can use to get started. |
+| **Credentials** | No API keys, `.env` files, or Azure/cloud credentials are committed. Copy `.env.example` to `.env` and fill in your own values before running. |
+| **Embeddings / pre-built database** | `academic.duckdb` is not committed (it is generated from your own data export). You must build it yourself with `build_duckdb.py`. |
+
+## Data
+
+The database is built from a [Pure](https://pure.eur.nl/) research-information-system export converted to JSONL format. **The source data is not included in this repository.**
+
+To use this project you need to supply your own data in the expected JSONL format. See [data/DATA_FORMAT.md](data/DATA_FORMAT.md) for the full field reference and a minimal example, and [data/sample_data.jsonl](data/sample_data.jsonl) for 12 synthetic records you can use to verify the setup end-to-end before connecting real data.
+
+If you are working with a Pure instance, export your publications via the Pure API or reporting module, transform the records to the JSONL schema described in DATA_FORMAT.md, and then run `build_duckdb.py` as described below.
+
 ## Local development
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- `academic.duckdb` in the project root (build with `build_duckdb.py`)
+- An LLM with agentic (tool-calling) capabilities, accessible via a [LiteLLM](https://docs.litellm.ai/docs/providers)-compatible model string — any provider supported by LiteLLM works (Azure AI, OpenAI, OpenRouter, Vertex AI, Ollama/vLLM, etc.)
+- Your own publication data in the JSONL format described in [data/DATA_FORMAT.md](data/DATA_FORMAT.md), used to build `academic.duckdb`
 
 ### Configuration
 
@@ -107,11 +124,9 @@ pip install duckdb sentence-transformers
 python data/build_duckdb.py --input your_data.jsonl --db academic.duckdb
 ```
 
-Reads a JSONL file (one document per line), creates tables, builds the FTS index, generates embeddings with `BAAI/bge-m3`, and writes an HNSW index.
+Reads a JSONL file (one document per line), creates tables, builds the FTS index, generates embeddings with `BAAI/bge-m3`, and writes an HNSW index. Use [data/sample_data.jsonl](data/sample_data.jsonl) to test the pipeline before loading real data.
 
-**Adding new data:** re-run the script with a JSONL containing only the new records. The FTS and HNSW indexes are always dropped and rebuilt over the full `documents` table, so existing data remains indexed. Avoid re-submitting already-imported documents — the `document_authors` table has no deduplication and will accumulate duplicate rows. You can also delete the existing database and rebuild from scratch. 
-
-See [data/DATA_FORMAT.md](data/DATA_FORMAT.md) for the expected schema and a description of required vs optional fields. A sample dataset is provided in [data/sample_data.jsonl](data/sample_data.jsonl).
+**Adding new data:** re-run the script with a JSONL containing only the new records. The FTS and HNSW indexes are always dropped and rebuilt over the full `documents` table, so existing data remains indexed. Avoid re-submitting already-imported documents — the `document_authors` table has no deduplication and will accumulate duplicate rows. You can also delete the existing database and rebuild from scratch.
 
 ## Kubernetes / AKS deployment
 
