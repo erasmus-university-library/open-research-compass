@@ -428,7 +428,7 @@ def get_schema_internal():
 # EMBEDDING SEARCH (most similar search)
 # ============================================================
 
-EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:6666")
+EMBEDDING_SERVICE_URL = os.getenv("EMBEDDING_SERVICE_URL", "http://localhost:8080")
 
 def get_embedding(text: str):
     response = requests.post(

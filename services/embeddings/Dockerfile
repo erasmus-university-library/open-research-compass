@@ -11,6 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services/embeddings/embedding_service.py services/agent/config.py ./
 
-EXPOSE 6666
+EXPOSE 8080
 
-CMD ["uvicorn", "embedding_service:app", "--host", "0.0.0.0", "--port", "6666"]
+CMD ["uvicorn", "embedding_service:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -7,7 +7,7 @@ services:
     volumes:
       - model_cache:/root/.cache
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6666/docs')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/docs')"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -20,7 +20,7 @@ services:
     command: ["python", "mcp_server.py"]
     environment:
       DB_PATH: ${DB_PATH:-/data/academic.duckdb}
-      EMBEDDING_SERVICE_URL: http://embeddings:6666
+      EMBEDDING_SERVICE_URL: http://embeddings:8080
       MCP_PORT: "9000"
     volumes:
       - ../academic.duckdb:/data/academic.duckdb

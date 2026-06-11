@@ -28,7 +28,7 @@ embeddings:
     repository: embeddings
     tag: latest
   replicas: 1
-  port: 6666
+  port: 8080
   resources:
     requests:
       cpu: "2"

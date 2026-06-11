@@ -10,7 +10,7 @@ User ──► Frontend (Next.js, :3000)
                   ├── expansion_agent  (LiteLLM → Azure AI Mistral)
                   └── MCP Toolset ──► MCP Server (FastMCP SSE, :9000)
                                         ├── DuckDB 
-                                        └── Embedding Service (:6666)
+                                        └── Embedding Service (:8080)
                                               └── BAAI/bge-m3
 ```
 
@@ -20,7 +20,7 @@ User ──► Frontend (Next.js, :3000)
 |---|---|---|---|
 | `agent` | `services/agent/backend_agent.py` | 8000 | FastAPI + Google ADK root agent, AG-UI protocol |
 | `mcp` | `services/mcp/mcp_server.py` | 9000 | FastMCP SSE server — DuckDB tools exposed to the agent |
-| `embeddings` | `services/embeddings/embedding_service.py` | 6666 | FastAPI service serving `BAAI/bge-m3` embeddings |
+| `embeddings` | `services/embeddings/embedding_service.py` | 8080 | FastAPI service serving `BAAI/bge-m3` embeddings |
 | `frontend` | `ui/` | 3000 | Next.js chat UI |
 
 ### Agent logic (`services/agent/agent.py`)
