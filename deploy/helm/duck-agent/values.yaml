@@ -8,7 +8,7 @@ image:
 
 azureAiApiKey: ""     # --set azureAiApiKey=<key>
 azureAiApiBase: ""    # --set azureAiApiBase=<endpoint>
-azModel: "azure_ai/Mistral-Large-3"  # --set azModel=<model>
+modelName: "azure_ai/Mistral-Large-3"  # --set modelName=<model>
 
 storage:
   accountName: ""     # --set storage.accountName=<name>

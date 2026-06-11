@@ -4,11 +4,11 @@ from google.adk.agents import Agent, LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool import McpToolset, SseConnectionParams
 from google.adk.tools import agent_tool
-from config import AZ_MODEL
+from config import MODEL_NAME
 
 litellm.drop_params = True
-print('USING ', AZ_MODEL)
-MODEL = LiteLlm(model=AZ_MODEL)
+print('USING ', MODEL_NAME)
+MODEL = LiteLlm(model=MODEL_NAME)
 
 # # TESTING ONLY
 # root_agent = Agent(

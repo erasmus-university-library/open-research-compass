@@ -114,12 +114,12 @@ AZURE_AI_API_KEY=your-key-here
 AZURE_AI_API_BASE=https://your-endpoint.services.ai.azure.com/models
 
 # Model (optional, change if using a different provider)
-AZ_MODEL=azure_ai/Mistral-Large-3
+MODEL_NAME=azure_ai/Mistral-Large-3
 ```
 
-**Using a different LLM provider?** Set `AZ_MODEL` to the [LiteLLM model string](https://docs.litellm.ai/docs/providers) for your provider and add that provider's key instead. For example:
+**Using a different LLM provider?** Set `MODEL_NAME` to the [LiteLLM model string](https://docs.litellm.ai/docs/providers) for your provider and add that provider's key instead. For example:
 
-| Provider | `AZ_MODEL` value | Key to add to `.env` |
+| Provider | `MODEL_NAME` value | Key to add to `.env` |
 |---|---|---|
 | OpenAI | `openai/gpt-4o` | `OPENAI_API_KEY=sk-...` |
 | OpenRouter | `openrouter/google/gemini-2.0-flash-001` | `OPENROUTER_API_KEY=sk-...` |
@@ -180,7 +180,7 @@ All configuration is read from `.env`. The full list:
 |---|---|---|---|
 | `AZURE_AI_API_KEY` | if using Azure AI | — | Azure AI API key |
 | `AZURE_AI_API_BASE` | if using Azure AI | — | Azure AI endpoint URL |
-| `AZ_MODEL` | no | `azure_ai/Mistral-Large-3` | LiteLLM model string for the agent |
+| `MODEL_NAME` | no | `azure_ai/Mistral-Large-3` | LiteLLM model string for the agent |
 | `EMBEDDING_MODEL` | no | `BAAI/bge-m3` | Embedding model used by the embedding service and `build_duckdb.py` |
 | `DB_PATH` | no | `academic.duckdb` | Path to the DuckDB file inside the container |
 

@@ -113,11 +113,11 @@ log "Deploying $SERVICE:$TAG via Helm"
 # Load Azure AI credentials from .env if present
 AZURE_AI_API_KEY="${AZURE_AI_API_KEY:-}"
 AZURE_AI_API_BASE="${AZURE_AI_API_BASE:-}"
-AZ_MODEL="${AZ_MODEL:-}"
+MODEL_NAME="${MODEL_NAME:-}"
 if [[ -f .env ]]; then
   AZURE_AI_API_KEY=$(grep -E '^AZURE_AI_API_KEY=' .env | cut -d= -f2-)
   AZURE_AI_API_BASE=$(grep -E '^AZURE_AI_API_BASE=' .env | cut -d= -f2-)
-  AZ_MODEL=$(grep -E '^AZ_MODEL=' .env | cut -d= -f2-)
+  MODEL_NAME=$(grep -E '^MODEL_NAME=' .env | cut -d= -f2-)
 fi
 
 helm upgrade "$HELM_RELEASE" ./deploy/helm/duck-agent \
@@ -126,7 +126,7 @@ helm upgrade "$HELM_RELEASE" ./deploy/helm/duck-agent \
   --set "${SERVICE}.image.tag=${TAG}" \
   --set "azureAiApiKey=${AZURE_AI_API_KEY}" \
   --set "azureAiApiBase=${AZURE_AI_API_BASE}" \
-  ${AZ_MODEL:+--set "azModel=${AZ_MODEL}"} \
+  ${MODEL_NAME:+--set "modelName=${MODEL_NAME}"} \
   --wait \
   --timeout "$TIMEOUT"
 

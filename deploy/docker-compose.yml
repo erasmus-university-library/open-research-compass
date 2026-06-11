@@ -41,7 +41,7 @@ services:
     environment:
       AZURE_AI_API_KEY: ${AZURE_AI_API_KEY}
       AZURE_AI_API_BASE: ${AZURE_AI_API_BASE}
-      AZ_MODEL: ${AZ_MODEL:-azure_ai/mistral-small-2503}
+      MODEL_NAME: ${MODEL_NAME:-azure_ai/mistral-small-2503}
       MCP_URL: http://mcp:9000/sse
     depends_on:
       mcp:

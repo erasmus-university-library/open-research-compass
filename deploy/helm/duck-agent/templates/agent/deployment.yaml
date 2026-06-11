@@ -47,8 +47,8 @@ spec:
                 secretKeyRef:
                   name: azure-ai-secret
                   key: api_base
-            - name: AZ_MODEL
-              value: {{ .Values.azModel }}
+            - name: MODEL_NAME
+              value: {{ .Values.modelName }}
             - name: MCP_URL
               value: http://mcp:{{ .Values.mcp.port }}/sse
           resources:
