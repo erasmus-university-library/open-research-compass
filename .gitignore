@@ -1,5 +1,6 @@
 # Secrets
 .env
+.env-sandbox
 
 # DuckDB database files
 *.duckdb

@@ -57,3 +57,14 @@
 .copilotKitMessage.copilotKitAssistantMessage {
   border-radius: 1.2rem 1.2rem 1.2rem 0.4rem;
 }
+
+
+/* Activity pill — dot pulse with glow */
+@keyframes dot-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 35, 40, 0.4); }
+  50%       { opacity: 0.6; box-shadow: 0 0 0 4px rgba(0, 35, 40, 0); }
+}
+
+.activity-dot {
+  animation: dot-glow 1.4s ease-in-out infinite;
+}

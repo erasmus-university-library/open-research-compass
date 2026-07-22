@@ -1,11 +1,54 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import "@copilotkit/react-core/v2/styles.css";
 import "./style.css";
 import { CopilotChat } from "@copilotkit/react-core/v2";
-import { CopilotKit, useCopilotChat } from "@copilotkit/react-core";
+import { CopilotKit, useCopilotChat, useCopilotChatInternal } from "@copilotkit/react-core";
 import { TextMessage, MessageRole } from "@copilotkit/runtime-client-gql";
+
+const TOOL_LABELS: Record<string, string> = {
+  search_database:  "Searching",
+  search_hybrid:    "Searching",
+  search_authors:   "Searching authors",
+  get_author_stats: "Analyzing authors",
+  most_similar:     "Finding similar papers",
+  get_faculties:    "Fetching faculties",
+  get_schema:       "Reading schema",
+  summarize_table:  "Summarizing",
+  execute_query:    "Querying",
+  expansion_agent:  "Expanding query",
+};
+
+const ActivityPill = () => {
+  const { isLoading, messages = [] } = useCopilotChatInternal();
+  const msgs = messages as any[];
+  const [dots, setDots] = useState(1);
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const id = setInterval(() => setDots((d) => (d % 3) + 1), 500);
+    return () => clearInterval(id);
+  }, [isLoading]);
+
+  if (!isLoading) return null;
+
+  const completedIds = new Set(
+    msgs.filter((m) => m.role === "tool").map((m) => m.toolCallId).filter(Boolean),
+  );
+  const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+  const activeCalls = (lastAssistant?.toolCalls ?? []).filter((tc: any) => !completedIds.has(tc.id));
+  const toolName = activeCalls[activeCalls.length - 1]?.function?.name;
+  const label = (toolName ? TOOL_LABELS[toolName] ?? toolName : null) ?? "Thinking";
+
+  return (
+    <div className="self-end flex items-center gap-1.5 rounded-full border border-[#e3dad8] bg-white px-4 py-1.5 text-[11px] text-[#002328] font-mono shadow-sm tracking-wide">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#002328] flex-shrink-0 activity-dot" />
+      <span>{label}</span>
+      <span className="inline-block w-[2ch] text-left">{".".repeat(dots)}</span>
+    </div>
+  );
+};
 
 
 interface AgenticChatProps {
@@ -85,8 +128,11 @@ const AgenticChat: React.FC<AgenticChatProps> = ({ params }) => {
 const Chat = () => {
   return (
     <div className="flex justify-center items-center h-[90vh] w-full bg-white">
-      <div className="flex h-full w-full max-w-5xl flex-col p-4 gap-3">
+      <div className="flex h-full w-full max-w-5xl flex-col p-4 gap-2">
         <GroupedSuggestions />
+        <div className="flex justify-end min-h-[2rem] items-center">
+          <ActivityPill />
+        </div>
         <div className="flex-1 min-h-0">
           <CopilotChat
             agentId="root_agent"

@@ -30,7 +30,7 @@ The root agent (Mistral via Azure AI) dispatches to five workflows:
 | Query type | Workflow |
 |---|---|
 | **Expert identification** | `expansion_agent` → `get_author_stats` |
-| **Topic / concept / method** | `expansion_agent` → `search_database` |
+| **Topic / concept / method** | `expansion_agent` → `search_hybrid` (falls back to `search_database` if no results) |
 | **Person / author** | `search_authors` → profile synthesis |
 | **Similarity** | `most_similar` (vector search) |
 | **Open-ended analytics** | `get_schema` → `summarize_table` → `execute_query` |
@@ -39,7 +39,8 @@ The root agent (Mistral via Azure AI) dispatches to five workflows:
 
 | Tool | Description |
 |---|---|
-| `search_database` | BM25 full-text search over titles and abstracts |
+| `search_hybrid` | Hybrid search: BM25 keyword filter + cosine similarity re-ranking (preferred for topic/concept/method queries) |
+| `search_database` | BM25 full-text search over titles and abstracts (fallback when `search_hybrid` returns no results) |
 | `get_author_stats` | Rank authors by matching publication count |
 | `search_authors` | Retrieve all publications for a named author |
 | `most_similar` | Cosine similarity vector search |

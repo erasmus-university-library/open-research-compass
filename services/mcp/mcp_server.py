@@ -490,6 +490,96 @@ def most_similar_internal(query:str):
     return json.dumps(results)
 
 # ============================================================
+# HYBRID SEARCH
+# ============================================================
+
+def hybrid_search_internal(
+    queries: str,
+    query: str,
+    faculty_name: Optional[str] = None,
+    limit: int = 50,
+):
+    if not queries or not query:
+        return []
+
+    embedding, embedding_dim = get_embedding(query)
+
+    sql = f"""
+    SELECT
+        d.id,
+        d.issued,
+        d.title,
+        d.language,
+        d.type,
+        d.doi,
+        d.abstract,
+        string_agg(
+            a.name || ' (' || COALESCE(a.faculty_name, '') || ')',
+            '; '
+        ) AS author_names,
+        array_cosine_similarity(de.embedding, {embedding}::FLOAT[{embedding_dim}]) AS similarity
+
+    FROM document_embeddings de
+    JOIN documents d ON d.id = de.document_id
+    JOIN document_authors da ON d.id = da.document_id
+    JOIN authors a ON da.author_uuid = a.uuid
+
+    WHERE de.document_id IN (
+        SELECT scored.id
+        FROM (
+            SELECT id, fts_main_documents.match_bm25(id, ?) AS bm25_score
+            FROM documents
+        ) scored
+        JOIN document_authors da2 ON scored.id = da2.document_id
+        JOIN authors a2 ON da2.author_uuid = a2.uuid
+        WHERE scored.bm25_score IS NOT NULL
+    """
+
+    params = [queries]
+
+    if faculty_name:
+        sql += "AND a2.faculty_name = ?\n"
+        params.append(faculty_name)
+
+    sql += f"""
+    )
+
+    GROUP BY
+        d.id,
+        d.issued,
+        d.title,
+        d.language,
+        d.type,
+        d.doi,
+        d.abstract,
+        similarity
+
+    ORDER BY similarity DESC
+    LIMIT {limit}
+    """
+
+    con = get_connection()
+
+    try:
+        rows = con.execute(sql, params).fetchall()
+        return [
+            {
+                "id": r[0],
+                "issued": r[1],
+                "title": r[2],
+                "language": r[3],
+                "type": r[4],
+                "doi": r[5],
+                "abstract": r[6],
+                "authors": r[7],
+                "similarity": r[8],
+            }
+            for r in rows
+        ]
+    finally:
+        con.close()
+
+# ============================================================
 # SUMMARIZE TABLE
 # ============================================================
 
@@ -626,6 +716,35 @@ def search_database(
     return search_database_internal(
         queries=queries,
         faculty_name=faculty_name
+    )
+
+@mcp.tool()
+def search_hybrid(
+    queries: str,
+    query: str,
+    faculty_name: Optional[str] = None,
+):
+    """
+    Hybrid search combining BM25 keyword filtering with vector similarity re-ranking.
+
+    Use this instead of search_database for TOPIC / CONCEPT / METHOD queries.
+    BM25 filters to documents with keyword overlap; cosine similarity on embeddings
+    then re-ranks those candidates by semantic relevance.
+
+    Args:
+        queries: BM25 query string from expansion_agent (OR-joined terms and phrases).
+        query:   The user's original question verbatim — used to generate the embedding.
+        faculty_name: Optional faculty filter applied at the BM25 stage.
+                      Call get_faculties() for valid values.
+
+    Returns:
+        Up to 50 documents ordered by semantic similarity (highest first),
+        each with: id, issued, title, language, type, doi, abstract, authors, similarity.
+    """
+    return hybrid_search_internal(
+        queries=queries,
+        query=query,
+        faculty_name=faculty_name,
     )
 
 @mcp.tool()
