@@ -1,14 +1,31 @@
 import os
 import litellm
+from typing import List, Optional
 from google.adk.agents import Agent, LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool import McpToolset, SseConnectionParams
+from google.adk.tools.base_tool import BaseTool
 from google.adk.tools import agent_tool
+from google.adk.agents.readonly_context import ReadonlyContext
 from config import MODEL_NAME
 
 litellm.drop_params = True
 print('USING ', MODEL_NAME)
 MODEL = LiteLlm(model=MODEL_NAME)
+
+
+class CachedMcpToolset(McpToolset):
+    """McpToolset that caches the tool list after the first fetch to avoid
+    a ListTools round-trip on every LLM call in the agent loop."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._tools_cache: Optional[List[BaseTool]] = None
+
+    async def get_tools(self, readonly_context: Optional[ReadonlyContext] = None) -> List[BaseTool]:
+        if self._tools_cache is None:
+            self._tools_cache = await super().get_tools(readonly_context)
+        return self._tools_cache
 
 
 # Expansion agent
@@ -42,7 +59,7 @@ expansion_agent = LlmAgent(
 )
 
 # Setup MCP Tools
-mcp_toolset = McpToolset(
+mcp_toolset = CachedMcpToolset(
     connection_params=SseConnectionParams(
         url=os.getenv("MCP_URL", "http://localhost:9000/sse")
     )
@@ -57,7 +74,7 @@ root_agent = Agent(
     description='Academic Expert Identification Agent (MCP-backed).',
     instruction="""
     You are an academic research assistant. You have access to a dump from the Erasmus University CRIS system. Always ground your answers in the results of the tool calls. 
-    1. For EXPERTS: Call expansion_agent, always verify faculty names using get_faculties() before filtering, then get_author_stats, display the top results (up to 10 max.) and the used keywords and suggest to the user to that you can generate a (short) profile for the authors (see 3. For PERSONS and AUTHORS: Call search_authors).
+    1. For EXPERTS: Call expansion_agent, always verify faculty names using get_faculties() before filtering, then get_author_stats, display the top results (up to 10 max.) and the used keywords, and suggest to the user to that you can generate a (short) profile for the authors (see 3. For PERSONS and AUTHORS: Call search_authors).
     2. For EXPLANATIONS, TOPICS, CONCEPTS and/or METHODS: Call expansion_agent, always verify faculty names using get_faculties() before filtering, then search_hybrid (passing the expansion output as `queries` and the user's original question as `query`) to find relevant publications. Use the results to answer the user's question. Fall back to search_database only if search_hybrid returns no results.
     3. For PERSONS and AUTHORS: Call search_authors, always verify faculty names using get_faculties() before filtering, use the results to create a profile.
     4. For SIMILARITY questions: Call most_similar.

@@ -252,8 +252,6 @@ def get_author_stats_internal(
     LIMIT 50
     """
 
-    print(sql)
-
     con = get_connection()
 
     try:
