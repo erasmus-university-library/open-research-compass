@@ -71,123 +71,123 @@ def build_fts_query(queries):
 # SEARCH DATABASE
 # ============================================================
 
-def search_database_internal(
-    queries: str,
-    faculty_name: Optional[str] = None
-):
+# def search_database_internal(
+#     queries: str,
+#     faculty_name: Optional[str] = None
+# ):
 
-    if not queries:
-        return []
+#     if not queries:
+#         return []
 
 
-    sql = """
-    WITH ranked_docs AS (
+#     sql = """
+#     WITH ranked_docs AS (
 
-        SELECT
-            d.*,
+#         SELECT
+#             d.*,
 
-            fts_main_documents.match_bm25(
-                d.id,
-                ?
-            ) AS bm25_score
+#             fts_main_documents.match_bm25(
+#                 d.id,
+#                 ?
+#             ) AS bm25_score
 
-        FROM documents d
+#         FROM documents d
 
-    ),
+#     ),
 
-    filtered AS (
+#     filtered AS (
 
-        SELECT DISTINCT
-            rd.*
+#         SELECT DISTINCT
+#             rd.*
 
-        FROM ranked_docs rd
+#         FROM ranked_docs rd
 
-        LEFT JOIN document_authors da
-            ON rd.id = da.document_id
+#         LEFT JOIN document_authors da
+#             ON rd.id = da.document_id
 
-        LEFT JOIN authors a
-            ON da.author_uuid = a.uuid
+#         LEFT JOIN authors a
+#             ON da.author_uuid = a.uuid
 
-        WHERE bm25_score IS NOT NULL
-    """
+#         WHERE bm25_score IS NOT NULL
+#     """
 
-    params = [queries]
+#     params = [queries]
 
-    if faculty_name:
+#     if faculty_name:
 
-        sql += """
-        AND a.faculty_name = ?
-        """
+#         sql += """
+#         AND a.faculty_name = ?
+#         """
 
-        params.append(faculty_name)
+#         params.append(faculty_name)
 
-    sql += """
-    )
+#     sql += """
+#     )
 
-    SELECT
+#     SELECT
 
-        f.id,
-        f.issued,
-        f.title,
-        f.language,
-        f.type,
-        f.doi,
-        f.abstract,
-        f.bm25_score,
+#         f.id,
+#         f.issued,
+#         f.title,
+#         f.language,
+#         f.type,
+#         f.doi,
+#         f.abstract,
+#         f.bm25_score,
 
-        string_agg(
-            a.name || ' (' || COALESCE(a.faculty_name, '') || ')',
-            '; '
-        ) AS author_names
+#         string_agg(
+#             a.name || ' (' || COALESCE(a.faculty_name, '') || ')',
+#             '; '
+#         ) AS author_names
 
-    FROM filtered f
+#     FROM filtered f
 
-    LEFT JOIN document_authors da
-        ON f.id = da.document_id
+#     LEFT JOIN document_authors da
+#         ON f.id = da.document_id
 
-    LEFT JOIN authors a
-        ON da.author_uuid = a.uuid
+#     LEFT JOIN authors a
+#         ON da.author_uuid = a.uuid
 
-    GROUP BY
-        f.id,
-        f.issued,
-        f.title,
-        f.language,
-        f.type,
-        f.doi,
-        f.abstract,
-        f.bm25_score
+#     GROUP BY
+#         f.id,
+#         f.issued,
+#         f.title,
+#         f.language,
+#         f.type,
+#         f.doi,
+#         f.abstract,
+#         f.bm25_score
 
-    ORDER BY f.bm25_score DESC
-    LIMIT 100
-    """
+#     ORDER BY f.bm25_score DESC
+#     LIMIT 100
+#     """
 
-    con = get_connection()
+#     con = get_connection()
 
-    try:
+#     try:
 
-        rows = con.execute(
-            sql,
-            params
-        ).fetchall()
+#         rows = con.execute(
+#             sql,
+#             params
+#         ).fetchall()
 
-        return [
-            {
-                "id": r[0],
-                "issued": r[1],
-                "title": r[2],
-                "language": r[3],
-                "type": r[4],
-                "doi": r[5],
-                "abstract": r[6],
-                "score": r[7],
-                "authors": r[8]
-            }
-            for r in rows
-        ]
+#         return [
+#             {
+#                 "id": r[0],
+#                 "issued": r[1],
+#                 "title": r[2],
+#                 "language": r[3],
+#                 "type": r[4],
+#                 "doi": r[5],
+#                 "abstract": r[6],
+#                 "score": r[7],
+#                 "authors": r[8]
+#             }
+#             for r in rows
+#         ]
 
-    finally:
-        con.close()
+#     finally:
+#         con.close()
 
 # ============================================================
 # AUTHOR STATS
@@ -687,34 +687,34 @@ def most_similar(query: str):
     """
     return most_similar_internal(query)
 
-@mcp.tool()
-def search_database(
-    queries: str,
-    faculty_name: Optional[str] = None
-):
-    """
-    Full-text BM25 search over publication titles and abstracts.
+# @mcp.tool()
+# def search_database(
+#     queries: str,
+#     faculty_name: Optional[str] = None
+# ):
+#     """
+#     Full-text BM25 search over publication titles and abstracts.
 
-    Use this for TOPIC / CONCEPT / METHOD queries AFTER calling expansion_agent.
-    Pass the expanded terms from expansion_agent directly as the `queries` string.
-    Do NOT pass the raw user question — pass the pre-processed expansion output.
+#     Use this for TOPIC / CONCEPT / METHOD queries AFTER calling expansion_agent.
+#     Pass the expanded terms from expansion_agent directly as the `queries` string.
+#     Do NOT pass the raw user question — pass the pre-processed expansion output.
 
-    Args:
-        queries: A BM25 query string of OR-joined terms and quoted phrases, e.g.
-                 '"machine learning" OR "deep learning" OR neural OR AI'.
-                 Use the output of expansion_agent verbatim.
-        faculty_name: Optional filter. Call get_faculties() to get valid values.
+#     Args:
+#         queries: A BM25 query string of OR-joined terms and quoted phrases, e.g.
+#                  '"machine learning" OR "deep learning" OR neural OR AI'.
+#                  Use the output of expansion_agent verbatim.
+#         faculty_name: Optional filter. Call get_faculties() to get valid values.
 
-    Returns:
-        List of up to 100 matching documents ordered by BM25 relevance score,
-        each with: id, issued, title, language, type, doi, abstract, score,
-        authors (semicolon-separated name (faculty) pairs).
-    """
+#     Returns:
+#         List of up to 100 matching documents ordered by BM25 relevance score,
+#         each with: id, issued, title, language, type, doi, abstract, score,
+#         authors (semicolon-separated name (faculty) pairs).
+#     """
 
-    return search_database_internal(
-        queries=queries,
-        faculty_name=faculty_name
-    )
+#     return search_database_internal(
+#         queries=queries,
+#         faculty_name=faculty_name
+#     )
 
 @mcp.tool()
 def search_hybrid(

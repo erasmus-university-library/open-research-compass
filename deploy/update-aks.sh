@@ -127,6 +127,7 @@ helm upgrade "$HELM_RELEASE" ./deploy/helm/duck-agent \
   --set "azureAiApiKey=${AZURE_AI_API_KEY}" \
   --set "azureAiApiBase=${AZURE_AI_API_BASE}" \
   ${MODEL_NAME:+--set "modelName=${MODEL_NAME}"} \
+  --set "embeddings.port=8080" \
   --wait \
   --timeout "$TIMEOUT"
 
