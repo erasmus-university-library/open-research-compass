@@ -196,47 +196,38 @@ def build_fts_query(queries):
 
 def get_author_stats_internal(
     queries: str,
+    query: str,
     faculty_name: Optional[str] = None
 ):
 
-    if not queries:
+    if not queries or not query:
         return []
 
-    sql = """
-    WITH ranked_docs AS (
+    embedding, embedding_dim = get_embedding(query)
 
+    sql = f"""
+    WITH bm25_candidates AS (
+        SELECT id
+        FROM (
+            SELECT id, fts_main_documents.match_bm25(id, ?, fields := 'title, abstract') AS bm25_score
+            FROM documents
+        ) scored
+        WHERE bm25_score IS NOT NULL
+    ),
+    paper_similarity AS (
         SELECT
-            d.id,
-            d.issued,
-
-            fts_main_documents.match_bm25(
-                d.id,
-                ?,
-                fields := 'title, abstract'
-                
-            ) AS bm25_score
-
-        FROM documents d
-        WHERE bm25_score NOT NULL
-
+            bc.id,
+            array_cosine_similarity(de.embedding, {embedding}::FLOAT[{embedding_dim}]) AS cosine_sim
+        FROM bm25_candidates bc
+        JOIN document_embeddings de ON de.document_id = bc.id
     )
-
-
     SELECT
-
         a.name || ' (' || COALESCE(a.faculty_name, '') || ')' AS expert_name,
-        COUNT(DISTINCT rd.id) AS matching_papers,
-
-    FROM ranked_docs rd
-
-    JOIN document_authors da
-        ON rd.id = da.document_id
-
-    JOIN authors a
-        ON da.author_uuid = a.uuid
-
-    WHERE rd.bm25_score IS NOT NULL
-      AND a.faculty_name != 'External'
+        SUM(ps.cosine_sim) AS semantic_relevance_score
+    FROM paper_similarity ps
+    JOIN document_authors da ON ps.id = da.document_id
+    JOIN authors a ON da.author_uuid = a.uuid
+    WHERE a.faculty_name != 'External'
     """
 
     params = [queries]
@@ -247,8 +238,8 @@ def get_author_stats_internal(
 
     sql += """
     GROUP BY a.name, a.faculty_name
-    HAVING matching_papers > 0
-    ORDER BY matching_papers DESC
+    HAVING semantic_relevance_score > 0
+    ORDER BY semantic_relevance_score DESC
     LIMIT 50
     """
 
@@ -748,29 +739,33 @@ def search_hybrid(
 @mcp.tool()
 def get_author_stats(
     queries: str,
+    query: str,
     faculty_name: Optional[str] = None
 ):
     """
-    Rank internal Erasmus authors by number of matching publications for a topic.
+    Rank internal Erasmus authors by number of semantically relevant publications for a topic.
 
     Use this as STEP 2 of the EXPERT workflow, after expansion_agent has produced
-    expanded search terms. Pass those expanded terms as `queries`.
-    Returns the top 50 authors ranked by publication count — use the top 5 to
-    generate expert bios.
+    expanded search terms. Pass those expanded terms as `queries` and the original
+    user question as `query`.
+    Returns the top 50 authors ranked by sum of cosine similarity scores across
+    their BM25-matching papers — use the top 5 to generate expert bios.
 
     Args:
         queries: A BM25 query string of OR-joined terms and quoted phrases.
                  Use the output of expansion_agent verbatim.
+        query: The original user question, used to compute semantic similarity.
         faculty_name: Optional filter. Call get_faculties() to get valid values.
 
     Returns:
-        List of up to 50 authors ordered by matching_papers descending,
-        each with: expert (name (faculty)), papers (int count).
+        List of up to 50 authors ordered by semantic_relevance_score descending,
+        each with: expert (name (faculty)), papers (float score).
         External authors are excluded automatically.
     """
 
     return get_author_stats_internal(
         queries=queries,
+        query=query,
         faculty_name=faculty_name
     )
 

@@ -39,8 +39,8 @@ The root agent (Mistral via Azure AI) dispatches to five workflows:
 
 | Tool | Description |
 |---|---|
-| `search_hybrid` | Hybrid search: BM25 keyword filter + cosine similarity re-ranking |
-| `get_author_stats` | Rank authors by matching publication count |
+| `search_hybrid` | Hybrid search: BM25 keyword filter + cosine similarity re-ranking (returns documents) |
+| `get_author_stats` | Rank authors by semantic relevance: BM25 keyword filter + sum of cosine similarity scores across matching papers |
 | `search_authors` | Retrieve all publications for a named author |
 | `most_similar` | Cosine similarity vector search |
 | `get_faculties` | Return all faculty names present in the DB (used to validate `faculty_name` filters) |
