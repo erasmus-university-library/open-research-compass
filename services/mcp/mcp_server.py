@@ -251,7 +251,7 @@ def get_author_stats_internal(
         return [
             {
                 "expert": r[0],
-                "papers": r[1]
+                "semantic_relevance_score": r[1]
             }
             for r in rows
         ]
@@ -323,6 +323,7 @@ def search_authors_internal(
         d.abstract
 
     ORDER BY d.issued DESC
+    LIMIT 30
     """
 
     con = get_connection()
@@ -336,11 +337,8 @@ def search_authors_internal(
 
         return [
             {
-                "id": r[0],
                 "issued": r[1],
                 "title": r[2],
-                "language": r[3],
-                "type": r[4],
                 "doi": r[5],
                 "abstract": r[6],
                 "authors": r[7]
@@ -466,13 +464,11 @@ def most_similar_internal(query:str):
     """
     rows = con.execute(sql).fetchall()
 
-    columns = [
-        d[0]
-        for d in con.description
-    ]
+    columns = [d[0] for d in con.description]
+    drop = {"id", "language", "type"}
 
     results = [
-        dict(zip(columns, row))
+        {k: v for k, v in zip(columns, row) if k not in drop}
         for row in rows
     ]
 
@@ -486,7 +482,7 @@ def hybrid_search_internal(
     queries: str,
     query: str,
     faculty_name: Optional[str] = None,
-    limit: int = 50,
+    limit: int = 15,
 ):
     if not queries or not query:
         return []
@@ -553,11 +549,8 @@ def hybrid_search_internal(
         rows = con.execute(sql, params).fetchall()
         return [
             {
-                "id": r[0],
                 "issued": r[1],
                 "title": r[2],
-                "language": r[3],
-                "type": r[4],
                 "doi": r[5],
                 "abstract": r[6],
                 "authors": r[7],
@@ -853,7 +846,7 @@ def execute_query(
     Execute a read-only SQL SELECT query against the DuckDB academic database.
 
     Use this ONLY after calling get_schema() to inspect available tables/columns.
-    For topic searches prefer search_database; for author lookups prefer
+    For topic searches prefer search_hybrid; for author lookups prefer
     search_authors. Use this tool only when those don't cover the user's need
     (e.g. aggregate statistics, date ranges, cross-table joins).
 

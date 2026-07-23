@@ -52,7 +52,7 @@ expansion_agent = LlmAgent(
     Be consise, do not generate unnecessary phrases. 
     Do not explain your reasoning.
 
-    GENERATE MAXIMUM 50 PHRASES.
+    GENERATE MAXIMUM 20 PHRASES.
     
 
 """
